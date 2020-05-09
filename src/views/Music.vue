@@ -10,15 +10,22 @@
           label="Duration"
           v-model="currentDuration"
           :min="minDuration"
-          :max="maxDuration">
+          :max="maxDuration"
+        >
         </v-slider>
         <div class="text-center">
-          <v-btn class="ma-2" large fab dark color="indigo">
+          <v-btn
+            @click="skipToPrevious"
+            class="ma-2"
+            fab
+            dark
+            color="indigo"
+          >
             <v-icon>mdi-skip-previous</v-icon>
           </v-btn>
           <v-btn
             v-if="isPlaying"
-            @click="toogle"
+            @click="togglePlayingState"
             class="ma-2"
             large
             fab
@@ -30,7 +37,7 @@
           <v-btn
             v-else
             class="ma-2"
-            @click="toogle"
+            @click="togglePlayingState"
             large
             fab
             dark
@@ -38,7 +45,7 @@
           >
             <v-icon>mdi-play</v-icon>
           </v-btn>
-          <v-btn class="ma-2" @click="skipNext" fab dark color="indigo">
+          <v-btn class="ma-2" @click="skipToNext" fab dark color="indigo">
             <v-icon>mdi-skip-next</v-icon>
           </v-btn>
         </div>
@@ -59,6 +66,7 @@
 <script>
 // eslint-disable-next-line no-unused-vars
 import { Howl, Howler } from "howler";
+import Player from "../classes/Player";
 export default {
   data() {
     return {
@@ -67,85 +75,74 @@ export default {
           name: "Mirai he hyoku",
           file:
             "/[얼티메이트] [140730] THE IDOLM@STER LIVE THE@TER HARMONY 02 (320K)/MP3/06. 未来飛行.mp3",
-          imageCover: ""
+          imageCover: "",
+          howl: null
         },
         {
           name: "Vivid Imagination",
           file:
             "/[얼티메이트] [140730] THE IDOLM@STER LIVE THE@TER HARMONY 02 (320K)/MP3/03. VIVID イマジネーション.mp3",
-          imageCover: ""
+          imageCover: "",
+          howl: null
+        },
+        {
+          name: "",
+          file:
+          "/THE IDOLM@STER LIVE THE@TER HARMONY 06/06.ホントウノワタシ.mp3",
+          imageCover: "",
+          howl: null
         }
       ],
+      currentSong: "",
       min: 0,
       max: 100,
-      volume: 35,
+      volume: 15,
       isPlaying: false,
       sound: "",
       currentDuration: 0,
       maxDuration: 0,
-      minDuration: 0
+      minDuration: 0,
+      player: ""
     };
   },
   mounted() {
-    let mutagScript = document.createElement("script");
-    mutagScript.setAttribute("src", "../node_modules/mutag/dist/mutag.min.js");
-    document.head.appendChild(mutagScript);
-    this.mediaPlayer();
-    this.skipNext();
-    this.currentDuration = setInterval(this.skipNext, 1000);
+    this.player = new Player(this.song);
   },
   methods: {
-    async toogle() {
+    async togglePlayingState() {
       this.isPlaying = !this.isPlaying;
     },
-    async skipNext() {
-      this.currentDuration = this.sound.seek();
+    async toggleProgressBar() {
+      setInterval(this.player.getProgress(), 1000)
     },
-    async getImageFromFile() {
-      /*let mu = window.mutag;
-      mu.fetch(this.song.file).then(tags => {
-        console.log(tags);
-      });*/
-      // eslint-disable-next-line no-unused-vars
+    async skipToNext() {
+      this.player.skip("next");
+      this.maxDuration = this.player.getMaxDuration();
     },
-    async mediaPlayer() {
-      this.sound = new Howl({
-        src: this.song.map(a => a.file).reverse(),
-        onload: () => {
-          this.maxDuration = self.formatTime(Math.round(this.song.duration()));
-          console.log("Im loaded maxduration :" + this.maxDuration)
-        },
-        onplay: () => {
-          this.isPlaying = true;
-          console.log("Im getting played!");
-        },
-        onend: () => {
-          this.isPlaying = false;
-          console.log("My bad im finished" + this.isPlaying)
-        }
-      });
-      console.log(this.song.map(a => a.file));
-      this.maxDuration = this.sound.duration();
-      await this.sound.play();
-      this.isPlaying = true;
-      console.log(await this.sound.duration());
-    }
+    async skipToPrevious() {
+      this.player.skip("prev");
+      this.maxDuration = this.player.getMaxDuration();
+    },
+    async play() {
+      this.player.play();
+      this.maxDuration = this.player.duration();
+      await this.toggleProgressBar()
+    },
   },
   watch: {
-    currentDuration: function() {
-      this.currentDuration = this.sound.seek();
+    currentDuration: function(val) {
+      this.currentDuration = val;
     },
     volume: function(val) {
       let aux = val / 100;
       Howler.volume(aux);
-      console.log(aux);
     },
     isPlaying: function(val) {
       console.log(val);
       if (val) {
-        this.sound.play();
+        this.player.play();
       } else {
-        this.sound.pause();
+        this.player.pause();
       }
     }
   }

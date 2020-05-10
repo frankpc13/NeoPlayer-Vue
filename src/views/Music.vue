@@ -127,6 +127,7 @@ export default {
       this.player.play();
       this.maxDuration = this.player.duration();
       await this.toggleProgressBar()
+      this.currentSong = this.player.getCurrentSong();
     },
   },
   watch: {

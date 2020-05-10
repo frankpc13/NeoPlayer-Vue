@@ -6,12 +6,17 @@ export default class Player {
   duration = 0;
   isPlaying = false;
   progress = 0;
+  currentSong = "";
 
   constructor(playlist) {
     this.playlist = playlist;
     console.log("the current playlist");
     console.log(playlist);
     this.index = 0;
+  }
+
+  getCurrentSong() {
+    return this.currentSong;
   }
 
   getMaxDuration() {
@@ -51,6 +56,8 @@ export default class Player {
         }
       });
     }
+    //set current song
+    this.currentSong = data;
     //begin the sound :v
     sound.play();
     //keep track the current played song
